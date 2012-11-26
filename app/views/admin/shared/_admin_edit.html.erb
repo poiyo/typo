@@ -1,0 +1,14 @@
+<% className = form_action.delete(:class) %>
+<%= form_tag(form_action, :id => "#{form_type}_form", :enctype => "multipart/form-data", :class => className) do %>
+
+  <%= render :partial => "form" %>
+
+<% end %>
+
+<div class="">
+<h4><%= _("Merge Articles") %></h4>
+<%= form_tag({:action => "merge_with", :id => @article.id}) do %>
+	Article ID <input type="text" id="article_id" name="merge_with" value="" />
+    <input type="submit" value="Merge" />
+<% end %>
+</div> 
