@@ -52,6 +52,22 @@ class Admin::ContentController < Admin::BaseController
     redirect_to :action => 'index'
   end
 
+  def merge_with
+    @record = Article.find(params[:id])
+    if params[:merge_with] == params[:id]
+      flash[:error] = _("Cannot merge article with itself")
+      redirect_to :action => 'edit', :id => params[:id]
+      return
+    end
+    @record.merge_with(params[:merge_with])
+    flash[:notice] = _("The article was merged successfully")
+    redirect_to :action => 'edit', :id => params[:id]
+    return
+  rescue ActiveRecord::RecordNotFound
+    flash[:error] = _("The target article does not exist")
+    redirect_to :action => 'edit', :id => params[:id]
+  end
+
   def insert_editor
     editor = 'visual'
     editor = 'simple' if params[:editor].to_s == 'simple'
@@ -180,7 +196,12 @@ class Admin::ContentController < Admin::BaseController
     @images = Resource.images_by_created_at.page(params[:page]).per(10)
     @resources = Resource.without_images_by_filename
     @macros = TextFilter.macro_filters
-    render 'new'
+    if current_user.admin?
+      render 'admin_new'
+    else
+      render 'new'
+    end
+
   end
 
   def set_the_flash

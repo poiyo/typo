@@ -21,6 +21,7 @@
 
 require 'uri'
 require 'cgi'
+require 'date'
 require File.expand_path(File.join(File.dirname(__FILE__), "..", "support", "paths"))
 require File.expand_path(File.join(File.dirname(__FILE__), "..", "support", "selectors"))
 
@@ -41,6 +42,12 @@ Given /^the blog is set up$/ do
                 :profile_id => 1,
                 :name => 'admin',
                 :state => 'active'})
+  User.create!({:login => 'poiyo',
+                :password => 'bbbbbbbb',
+                :email => 'poiyo@coolsushi.com',
+                :profile_id => 2,
+                :name => 'poiyo',
+                :state => 'active'})
 end
 
 And /^I am logged into the admin panel$/ do
@@ -55,9 +62,47 @@ And /^I am logged into the admin panel$/ do
   end
 end
 
+And /^I am logged into the admin panel as a contributor$/ do
+  visit '/accounts/login'
+  fill_in 'user_login', :with => 'poiyo'
+  fill_in 'user_password', :with => 'bbbbbbbb'
+  click_button 'Login'
+  if page.respond_to? :should
+    page.should have_content('Login successful')
+  else
+    assert page.has_content?('Login successful')
+  end
+end
+
+Given /the following articles exist/ do |articles_table|
+  articles_table.hashes.each do |article|
+    # each returned element will be a hash whose key is the table header.
+    # you should arrange to add that movie to the database here.
+    Article.create!(article)
+  end
+end
+
+Given /the following comments exist/ do |comments_table|
+  comments_table.hashes.each do |comment|
+    # each returned element will be a hash whose key is the table header.
+    # you should arrange to add that movie to the database here.
+    Comment.create!(comment)
+  end
+end
+
+Then /^the author for "([^"]*)" should be "([^"]*)"/ do |title, author|
+  article = Article.find_by_title(title)
+  assert article.author == author
+end
+
 # Single-line step scoper
 When /^(.*) within (.*[^:])$/ do |step, parent|
   with_scope(parent) { When step }
+end
+
+When /^I follow feedback for "([^"]*)"/ do |title|
+  article = Article.find_by_title(title)
+  visit "/admin/feedback/article/#{article.id}"
 end
 
 # Multi-line step scoper
